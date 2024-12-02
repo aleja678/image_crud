@@ -1,0 +1,73 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "testApplication": {
+            "Type": "AWS::ElasticBeanstalk::Application",
+            "Properties": {
+                "Description": "AWS Elastic Beanstalk Application for Docker"
+            }
+        },
+        "testApplicationVersion": {
+            "Type": "AWS::ElasticBeanstalk::ApplicationVersion",
+            "Properties": {
+                "ApplicationName": {
+                    "Ref": "testApplication"
+                },
+                "Description": "Version for Dockerized Spring Boot Application",
+                "SourceBundle": {
+                    "S3Bucket": {
+                        "Fn::Sub": "elasticbeanstalk-docker-${AWS::Region}"
+                    },
+                    "S3Key": "Dockerrun.aws.zip"
+                }
+            }
+        },
+        "testConfigurationTemplate": {
+            "Type": "AWS::ElasticBeanstalk::ConfigurationTemplate",
+            "Properties": {
+                "ApplicationName": {
+                    "Ref": "testApplication"
+                },
+                "Description": "Elastic Beanstalk Configuration Template for Docker",
+                "OptionSettings": [
+                    {
+                        "Namespace": "aws:elasticbeanstalk:environment",
+                        "OptionName": "EnvironmentType",
+                        "Value": "LoadBalanced"
+                    },
+                    {
+                        "Namespace": "aws:elasticbeanstalk:container:docker",
+                        "OptionName": "Dockerfile",
+                        "Value": "Dockerfile"
+                    },
+                    {
+                        "Namespace": "aws:autoscaling:launchconfiguration",
+                        "OptionName": "RootVolumeType",
+                        "Value": "gp3"
+                    },
+                    {
+                        "Namespace": "aws:autoscaling:launchconfiguration",
+                        "OptionName": "DisableIMDSv1",
+                        "Value": "true"
+                    }
+                ],
+                "SolutionStackName": "64bit Amazon Linux 2 v3.5.2 running Docker"
+            }
+        },
+        "testEnvironment": {
+            "Type": "AWS::ElasticBeanstalk::Environment",
+            "Properties": {
+                "ApplicationName": {
+                    "Ref": "testApplication"
+                },
+                "Description": "Elastic Beanstalk Environment for Docker",
+                "TemplateName": {
+                    "Ref": "testConfigurationTemplate"
+                },
+                "VersionLabel": {
+                    "Ref": "testApplicationVersion"
+                }
+            }
+        }
+    }
+}
